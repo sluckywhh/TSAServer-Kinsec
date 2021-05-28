@@ -2,7 +2,7 @@
 
 CTSAServiceHTTPApp::CTSAServiceHTTPApp()
 {
-    m_strIP = "127.0.0.1";
+    m_strIP = "0.0.0.0";
     m_nHttpPort = 80;
 
     memset(m_SM2Cert_B64, 0, sizeof(m_SM2Cert_B64));

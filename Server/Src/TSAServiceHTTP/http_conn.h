@@ -26,8 +26,8 @@ class http_conn
 {
 public:
     static const int FILENAME_LEN = 200;
-    static const int READ_BUFFER_SIZE = 2048;
-    static const int WRITE_BUFFER_SIZE = 1024;
+    static const int READ_BUFFER_SIZE = 20480;
+    static const int WRITE_BUFFER_SIZE = 10240;
     enum METHOD { GET = 0, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, CONNECT, PATCH };
     enum CHECK_STATE { CHECK_STATE_REQUESTLINE = 0, CHECK_STATE_HEADER, CHECK_STATE_REQUESTBODY };
     enum HTTP_CODE { NO_REQUEST, GET_REQUEST, BAD_REQUEST, NO_RESOURCE, FORBIDDEN_REQUEST, FILE_REQUEST,
@@ -63,7 +63,7 @@ private:
     bool add_status_line( int status, const char* title );
     bool add_headers( int content_length, const char *content_type );
     bool add_content_length( int content_length );
-    bool add_content_type( char *content_type );
+    bool add_content_type( const char *content_type );
     bool add_linger();
     bool add_blank_line();
 
@@ -96,7 +96,7 @@ private:
     int m_content_length_request;
     bool m_linger;
     char* m_function;
-    char* m_response_body;
+    char  m_response_body[10240];
     char* m_content_type_response;
     int m_content_length_response;
 

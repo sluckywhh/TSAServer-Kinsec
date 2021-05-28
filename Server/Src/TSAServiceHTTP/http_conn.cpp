@@ -87,7 +87,6 @@ void http_conn::init()
     m_user_agent = 0;
     m_accept = 0;
     m_request_body = 0;
-    m_response_body = 0;
     m_content_type_request = 0;
     m_content_length_request = 0;
     m_content_type_response = 0;
@@ -98,6 +97,8 @@ void http_conn::init()
     m_checked_idx = 0;
     m_read_idx = 0;
     m_write_idx = 0;
+    
+    memset( m_response_body, '\0', sizeof(m_response_body) );
     memset( m_read_buf, '\0', READ_BUFFER_SIZE );
     memset( m_write_buf, '\0', WRITE_BUFFER_SIZE );
     memset( m_real_file, '\0', FILENAME_LEN );
@@ -364,7 +365,7 @@ http_conn::HTTP_CODE http_conn::do_request()
         m_function = m_url + 10;
         http_function hf(m_function, m_request_body);
         if ( hf.FunctionProcess(m_response_body) ){
-            printf("do_request.m_response_body=====%s\n", m_response_body);
+            //printf("do_request.m_response_body=====%s\n", m_response_body);
             return FUNCTION_REQUEST;
         }
         else{
@@ -420,7 +421,7 @@ bool http_conn::write()
         init();
         return true;
     }
-
+    //printf("write...m_write_idx = %d \n", bytes_to_send);
     while( 1 )
     {
         temp = writev( m_sockfd, m_iv, m_iv_count );
@@ -489,8 +490,8 @@ bool http_conn::add_headers( int content_length, const char *content_type )
     add_blank_line();
 }
 
-//Content-Type: application/xxx-reply
-bool http_conn::add_content_type( char *content_type )
+//Content-Type: application/timestamp-reply
+bool http_conn::add_content_type( const char *content_type )
 {
     return add_response( "Content-Type: application/%s\r\n", content_type);
 }
@@ -517,7 +518,7 @@ bool http_conn::add_body( const char* content )
 
 bool http_conn::process_write( HTTP_CODE ret )
 {
-    printf("process_write======ret:%d\n", ret);
+    printf("process_write start\n");
     switch ( ret )
     {
         case INTERNAL_ERROR:
@@ -562,16 +563,11 @@ bool http_conn::process_write( HTTP_CODE ret )
         }
         case FUNCTION_REQUEST:
         {
-            /*
-            if (strcasecmp(m_content_type_request, "application/timestamp-query")){
+            if (strcasecmp(m_content_type_request, "application/timestamp-query") == 0){
                 add_status_line( 200, ok_200_title );
-                add_headers( strlen(m_response_body), "application/timestamp-reply" );
+                add_headers( strlen(m_response_body), "timestamp-reply" );
                 add_body( m_response_body );
             }
-            */
-            add_status_line( 200, ok_200_title );
-            add_headers( strlen(m_response_body), "application/timestamp-reply" );
-            add_body( m_response_body );
             break;
         }
         case FILE_REQUEST:
@@ -603,6 +599,9 @@ bool http_conn::process_write( HTTP_CODE ret )
         }
     }
 
+    printf("process_write end\n");
+    //printf("process_write======m_write_buf = %s\n", m_write_buf);
+    //printf("process_write======m_write_idx = %d\n", m_write_idx);
     m_iv[ 0 ].iov_base = m_write_buf;
     m_iv[ 0 ].iov_len = m_write_idx;
     m_iv_count = 1;
