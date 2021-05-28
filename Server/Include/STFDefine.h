@@ -1,0 +1,45 @@
+#ifndef _STFDEFINE_H_
+#define _STFDEFINE_H_
+
+typedef unsigned char SGD_UINT8;
+typedef unsigned int SGD_UINT32;
+
+//error code
+#define STF_TS_OK 0								//正常返回
+#define STF_TS_ERROR_BASE 0X04000000		
+#define STF_TS_INDATA_TOOLONG 0X04000001		//输入的用户信息超出规定范围
+#define STF_TS_NOT_ENOUGH_MEMORY 0X04000002 	//分配的内存空间不足
+#define STF_TS_SERVER_ERROR 0X04000003			//找不到服务器或超时响应
+#define STF_TS_MALFORMAT 0X04000004				//时间戳格式错误
+#define STF_TS_INVALID_ITEM 0X04000005			//输入的项目编号无效
+#define STF_TS_INVALID_SIGNATURE 0X04000006		//签名无效
+#define STF_TS_INVALID_ALG 0X04000007			//申请使用了不支持的算法
+#define STF_TS_INVALID_REQUEST 0X04000008		//非法的申请
+#define STF_TS_INVALID_DATAFORMAT 0X04000009	//数据格式错误
+#define STF_TS_TIME_NOTAVALIABLE 0X0400000A		//TSA的可信时间源出现问题
+#define STF_TS_UNACCEPTED_POLICY 0X0400000B 	//不支持申请消息中声明的策略
+#define STF_TS_UNACCEPTED_EXTENSION 0X0400000C	//申请消息中包括了不支持的扩展
+#define STF_TS_ADDINFO_NOT_AVALIABLE 0X0400000D	//有不理解或不可用的附加信息
+#define STF_TS_SYSTEM_FAILURE 0X04000000E		//系统内部错误 
+
+#define STF_TS_CONNECT_TIMEOUT 0X0400000021		//连接指定地址超时	
+#define STF_TS_SEND_TIMEOUT	0X0400000022		//数据包发送超时
+#define STF_TS_RECV_TIMEOUT 0X0400000023		//数据包接收超时
+
+
+//解析时间截的详细信息-Itemnumber
+#define STF_TIME_OF_STAMP 0X00000001		//签发时间
+#define STF_CN_OF_TSSIGNER 0X00000002		//签发者的通用名
+#define STF_ORIGINAL_DATA 0X00000003		//时间戳请求的原始信息
+#define STF_CERT_OF_TSSERVER 0X00000004		//时间戳服务器的证书		
+#define STF_CERTCHAIN_OF_TSSERVER 0X00000005		//时间戳服务器的证书链	
+#define STF_SOURCE_OF_TIME 0X00000006		//时间源的来源
+#define STF_TIME_PRECISION 0X00000007		//时间精度
+#define STF_RESPONSE_TYPE 0X00000008		//响应方式
+#define STF_SUBJECT_COUNTRY_OF_TSSIGNER 0X00000009		//签发者国家
+#define STF_SUBJECT_ORGNIZATION_OF_TSSIGNER 0X0000000A		//签发者组织
+#define STF_SUBJECT_CITY_OF_TSSIGNER 0X0000000B		//签发者城市
+#define STF_SUBJECT_EMIAL_OF_TSSIGNER 0X0000000C	//签发者电子邮箱
+
+
+#endif

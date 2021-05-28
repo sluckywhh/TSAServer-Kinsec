@@ -1,0 +1,24 @@
+#ifndef _TSSDEFINE_H
+#define _TSSDEFINE_H
+
+typedef char SGD_UNIT8;
+typedef int SGD_UINT32;
+
+#define STF_TS_OK 0								//正常返回
+#define STF_TS_ERROR_BASE 0X04000000		
+#define STF_TS_INDATA_TOOLONG 0X04000001		//输入的用户信息超出规定范围
+#define STF_TS_NOT_ENOUGH_MEMORY 0X04000002 	//分配的内存空间不足
+#define STF_TS_SERVER_ERROR 0X04000003			//找不到服务器或超时响应
+#define STF_TS_MALFORMAT 0X04000004				//时间戳格式错误
+#define STF_TS_INVALID_ITEM 0X04000005			//输入的项目编号无效
+#define STF_TS_INVALID_SIGNATURE 0X04000006		//签名无效
+#define STF_TS_INVALID_ALG 0X04000007			//申请使用了不支持的算法
+#define STF_TS_INVALID_REQUEST 0X04000008		//非法的申请
+#define STF_TS_INVALID_DATAFORMAT 0X04000009	//数据格式错误
+#define STF_TS_TIME_NOTAVALIABLE 0X0400000A		//TSA的可信时间源出现问题
+#define STF_TS_UNACCEPTED_POLICY 0X0400000B 	//不支持申请消息中声明的策略
+#define STF_TS_UNACCEPTED_EXTENSION 0X0400000C	//申请消息中包括了不支持的扩展
+#define STF_TS_ADDINFO_NOT_AVALIABLE 0X0400000D	//有不理解或不可用的附加信息
+#define STF_TS_SYSTEM_FAILURE 0X04000000E		//系统内部错误   
+
+#endif
