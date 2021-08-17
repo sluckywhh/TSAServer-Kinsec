@@ -20,25 +20,35 @@ public:
     void createTSASerialNumber(char *pszSN); //生成唯一时间戳序列号
 
 private:
-    CTSACommonUtil util;
     locker m_queuelocker;
 
 public:
     string m_strIP;
     int m_nHttpPort;
+    int m_nCryptoAlg; //密码算法：1硬件算法; 2软算法
+    
+    //日志等级
+    int m_nConsoleLogLevel; //控制台日志等级
+    int m_nFileLogLevel; //文件日志等级
+    int m_nDBLogLevel; //数据库日志等级
 
     //软证书
     char m_SM2Cert_B64[8192];   //时间戳证书(Base64)
 	char m_SM2PKey_B64[1024];   //时间戳证书私钥(Base64)
-    unsigned char *m_SM2Cert;   //时间戳证书
-	unsigned char *m_SM2PKey;   //时间戳证书私钥
+    unsigned char m_SM2Cert[8192];   //时间戳证书
+	unsigned char m_SM2PKey[8192];   //时间戳证书私钥
     int m_SM2CertLen;           //时间戳证书长度
     int m_SM2PKeyLen;           //时间戳证书私钥长度
 	//X509* m_SM2Ca;
 	//X509* m_SM2RootCa;
+    int m_FMSM2CertLen;           //密码卡时间戳证书长度
+    char m_FMSM2Cert_B64[8192];   //密码卡时间戳证书(Base64)
+    unsigned char m_FMSM2Cert[8192];   //密码卡时间戳证书
 	time_t m_SM2BeforeValid;
 	time_t m_SM2AfterValid;
 
+    CTSACommonUtil util;
+    CKTLogKit log;
 };
 
 

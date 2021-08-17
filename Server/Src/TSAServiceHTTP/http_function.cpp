@@ -30,7 +30,8 @@ http_function::~http_function()
 //º¯ÊýÃû×ª»»
 int http_function::FunctionName2FunctionDefine()
 {   
-    if(function_name == "TSAInitEnvironment") return TSA_INIT_ENVIRONMENT;
+    if(function_name == "TSATest") return TSA_TEST;
+    else if(function_name == "TSAInitEnvironment") return TSA_INIT_ENVIRONMENT;
     else if(function_name == "TSAClearEnvironment") return TSA_CLEAR_ENVIRONMENT;
     else if(function_name == "TSACreateTSRequest") return TSA_CREATE_TS_REQUEST;
     else if(function_name == "TSACreateTSResponse") return TSA_CREATE_TS_RESPONSE;
@@ -45,19 +46,23 @@ bool http_function::FunctionProcess(char *response_body)
 {
     printf("FunctionProcess start\n");
     ParseRequestData();
-    PrintMap(mrequestdata);
+    //PrintMap(mrequestdata);
     int fdefine = FunctionName2FunctionDefine();
-    printf("FunctionProcess...fdefine=%d\n", fdefine);
+    //printf("FunctionProcess...fdefine=%d\n", fdefine);
 
-    int retCode = TSAFunctionAssign(fdefine, mrequestdata, mresponsedata);
+    string errmsg = "";
+    int retCode = TSAFunctionAssign(fdefine, errmsg, mrequestdata, mresponsedata);
+    //int retCode = TSATestHard();
+    //response_data = "TSATestHard\n";
     if (SAR_OK != retCode){
-        printf("FunctionProcess error: %d\n", retCode);
+        printf("TSAFunctionAssign error: %08x(%s)\n", retCode, errmsg.c_str());
         return false;
     }
 
     EncapsulationResponseData();
-    printf("FunctionProcess response_data===%s\n", response_data.c_str());
+    //printf("FunctionProcess response_data===%s\n", response_data.c_str());
     strcpy( response_body, response_data.c_str() );
+    printf("FunctionProcess end\n");
 
     return true;
 }

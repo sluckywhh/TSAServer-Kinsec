@@ -88,6 +88,7 @@ void Service()
     
 	signal( SIGTERM, OnBeforeExit );
 
+    //读取应用配置数据
 	if( g_app.start() != 0 )
 	{
 		Stop();
@@ -105,16 +106,16 @@ void Service()
     }
     catch( ... )
     {
+        Stop();
         exit( 0 );
     }
 
     http_conn* users = new http_conn[ MAX_FD ];
     assert( users );
-    int user_count = 0;
 
-    int listenfd = socket( PF_INET, SOCK_STREAM, 0 );
+    int listenfd = socket( AF_INET, SOCK_STREAM, 0 );
     assert( listenfd >= 0 );
-    struct linger tmp = { 1, 0 };
+    struct linger tmp = { 1, 5 };
     setsockopt( listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof( tmp ) );
 
     int ret = 0;
@@ -123,27 +124,26 @@ void Service()
     address.sin_family = AF_INET;
     inet_pton( AF_INET, ip, &address.sin_addr );
     address.sin_port = htons( port );
-
     ret = bind( listenfd, ( struct sockaddr* )&address, sizeof( address ) );
     assert( ret >= 0 );
-
-    ret = listen( listenfd, 5 );
+    ret = listen( listenfd, 10 );
     assert( ret >= 0 );
 
     epoll_event events[ MAX_EVENT_NUMBER ];
-    int epollfd = epoll_create( 5 );
+    int epollfd = epoll_create( MAX_FD ); //创建epoll
     assert( epollfd != -1 );
-    addfd( epollfd, listenfd, false );
+    addfd( epollfd, listenfd, false ); //注册listenfd到epoll
     http_conn::m_epollfd = epollfd;
     printf( "[Info] 时间戳颁发服务(HTTP)启动成功！\n" );
     printf( "[Info] IP:%s, Port:%d\n", ip, port );
     while( true )
     {
+        printf( "[Info] m_user_count :%d\n", http_conn::m_user_count );
         int number = epoll_wait( epollfd, events, MAX_EVENT_NUMBER, -1 );
-        if( number < 0 ) printf( "%d----%d\n", number,errno  );
+        printf( "[Info] epoll_wait num:%d\n", number );
         if ( ( number < 0 ) && ( errno != EINTR ) )
         {
-            printf( "epoll failure\n" );
+            printf( "[Error]epoll failure\n" );
             exit( 0 );
             break;
         }
@@ -154,11 +154,11 @@ void Service()
             if( sockfd == listenfd )
             {
                 struct sockaddr_in client_address;
-                socklen_t client_addrlength = sizeof( client_address );
-                int connfd = accept( listenfd, ( struct sockaddr* )&client_address, &client_addrlength );
+                socklen_t client_addr_length = sizeof( client_address );
+                int connfd = accept( listenfd, ( struct sockaddr* )&client_address, &client_addr_length );
                 if ( connfd < 0 )
                 {
-                    printf( "errno is: %d\n", errno );
+                    printf( "[Error] accept errno is: %d\n", errno );
                     continue;
                 }
                 if( http_conn::m_user_count >= MAX_FD )

@@ -8,11 +8,12 @@
 #include "STFDefine.h"
 #include "KSSignLibFunc.h"
 #include "MyToolLibFunc.h"
-//#include "ktsgd.h"
+#include "fmsgd.h"
 
 /****************************************************************
  * 函数名定义
  ****************************************************************/
+#define TSA_TEST 1000
 #define TSA_INIT_ENVIRONMENT 1001
 #define TSA_CLEAR_ENVIRONMENT 1002
 #define TSA_CREATE_TS_REQUEST 1003
@@ -21,16 +22,63 @@
 #define TSA_GET_TS_INFO 1006
 #define TSA_GET_TS_DETAIL 1007
 /****************************************************************/
-
+SGD_UINT32 TSATestSoft();
+SGD_UINT32 TSATestHard();
 /****************************************************************
  * 函数分发
  ****************************************************************/
 SGD_UINT32 TSAFunctionAssign(
-	int function_define, 
+	int function_define,
+	string &errMsg,
 	map<string, string> mrequestdata, 
 	map<string, string> &mresponsedata);
 /****************************************************************/
+/****************************************************************
+ * 密码卡相关函数
+ * 回调函数：摘要函数、私钥加密函数、验证签名函数
+ * 算法标识转换函数
+ * SM2预处理操作
+ * 导出签名证书
+ ****************************************************************/
+const int nKeyIndex = 1;
+const int nRSAKeyMax = 383;
+int toSGDAlgID(int KTAlgID); //信安FJCAApiConst.h部分算法标识-->国标算法标识
+int FMSM2YCL(void *hSessionHandle, unsigned char *in, int inlen, unsigned char *out, int *outlen);
+int FMExportSignCert(unsigned char *cert, int certlen);
 
+int FMFuncDigest(
+	void *hSessionHandle,				// 会话句柄
+	int algid,							// 摘要算法标识
+	unsigned char *in,					// 输入数据
+	int inlen,							// 输入数据的长度
+	unsigned char *cert,				// 证书（若证书为NULL，则进行摘要运算；若证书为SM2证书，且摘要算法为SM3，则进行SM2签名预处理运算）
+	int certlen,						// 证书的长度
+	unsigned char *out,					// 输出数据
+	int *outlen);						// 输出数据的长度
+
+int FMFuncPrivEnc(
+	void *hSessionHandle,
+	unsigned char *in, //传入数据已做摘要运算
+	int inlen,
+	unsigned char *out,
+	int *outlen);
+
+int FMFuncCertVrfSign(
+	void *hSessionHandle,
+	bool bIsDigest,
+	unsigned char *data,	// 原文或摘要（若为摘要，对于RSA算法，摘要为原文摘要的结果；对于SM2算法，摘要为原文签名预处理的结果）
+	int datalen,
+	unsigned char *sign,
+	int signlen,
+	unsigned char *cert,
+	int certlen);
+/****************************************************************/
+
+
+
+/****************************************************************
+ * 国密标准接口
+ ****************************************************************/
 /*
 建立时间戳环境句柄
 phTSHandle[OUT]:时间截环境句柄指针。
@@ -118,6 +166,8 @@ uiHashAlgID[IN]:密码杂凑算法标识
 uiSignatureAlgID[IN]:签名算法标识
 pucTSCert[IN]:TSA的证书,DER编码格式
 uiTSCertLength [IN]:TSA证书的长度
+pucInData[IN];需要验证时间截的用户信息(原文)(非国标参数)
+uiInDataLength [IN]:用户信息的长度(原文长度)(非国标参数)
 返回值:
 0:成功;其他:失败。
 备注:
@@ -128,7 +178,7 @@ uiTSCertLength [IN]:TSA证书的长度
 /*
 HTTP Post 请求body：
 ts_response(Base64), ts_response_length, hash_alg_id(SGD_SM3,SGD_SHA1,SGD_SHA256), signature_alg_id,
-ts_cert(Base64), ts_cert_length
+ts_cert(Base64), ts_cert_length, in_data(Base64), in_data_length
 HTTP Post 响应body：
 verify_result(0成功)
 */
@@ -138,7 +188,9 @@ SGD_UINT32 STF_VerifyTSValidity(void* hTSHandle,
 	SGD_UINT32 uiHashAlgID, 
 	SGD_UINT32 uiSignatureAlgID, 
 	SGD_UINT8 *pucTSCert, 
-	SGD_UINT32 uiTSCertLength);
+	SGD_UINT32 uiTSCertLength,
+	SGD_UINT8 *pucInData, 
+	SGD_UINT32 uiInDataLength);
 
 /*
 获取时间戳的主要信息。
@@ -200,5 +252,7 @@ SGD_UINT32 STF_GetTSDetail(void* hTSHandle,
 	SGD_UINT8 *pucItemValue, 
 	SGD_UINT32 *puiItemValueLength);
 
+
+/****************************************************************/
 
 #endif

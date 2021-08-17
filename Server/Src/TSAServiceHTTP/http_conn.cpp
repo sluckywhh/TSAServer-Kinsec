@@ -10,7 +10,7 @@ const char* error_404_form = "The requested file was not found on this server.\n
 const char* error_500_title = "Internal Error";
 const char* error_500_form = "There was an unusual problem serving the requested file.\n";
 
-const char* file_root_path = "../file";
+const char* file_root_path = "../File/";
 
 int setnonblocking( int fd )
 {
@@ -24,7 +24,8 @@ void addfd( int epollfd, int fd, bool one_shot )
 {
     epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+    event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;//EPOLLET：将EPOLL设为边缘触发(Edge Triggered)模式
+    //event.events = EPOLLIN | EPOLLRDHUP;
     if( one_shot )
     {
         event.events |= EPOLLONESHOT;
@@ -63,6 +64,8 @@ void http_conn::close_conn( bool real_close )
 
 void http_conn::init( int sockfd, const sockaddr_in& addr )
 {
+    printf( "[Info] user init: sockfd[%d], ipaddr[%s] \n", sockfd, inet_ntoa(addr.sin_addr) );
+
     m_sockfd = sockfd;
     m_address = addr;
     int error = 0;
@@ -151,6 +154,7 @@ bool http_conn::read()
     while( true )
     {
         bytes_read = recv( m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0 );
+        //printf("read...bytes_read: %d\n", bytes_read);
         if ( bytes_read == -1 )
         {
             if( errno == EAGAIN || errno == EWOULDBLOCK )
@@ -173,7 +177,7 @@ bool http_conn::read()
 //[Method]+[空格]+[URL]+[空格]+[Version]+[\r\n]
 http_conn::HTTP_CODE http_conn::parse_request_line( char* text )
 {
-    printf("parse_request_line input.text===%s\n", text);
+    //printf("parse_request_line input.text===%s\n", text);
     m_url = strpbrk( text, " \t" );
     if ( ! m_url )
     {
@@ -218,7 +222,7 @@ http_conn::HTTP_CODE http_conn::parse_request_line( char* text )
         return BAD_REQUEST;
     }
 
-    printf("parse_request_line.m_url======%s \n", m_url);
+    //printf("parse_request_line.m_url======%s \n", m_url);
     m_check_state = CHECK_STATE_HEADER;
     return NO_REQUEST;
 }
@@ -310,7 +314,7 @@ http_conn::HTTP_CODE http_conn::process_read()
     {
         text = get_line();
         m_start_line = m_checked_idx;
-        printf( "received http line: %s\n", text );
+        //printf( "received http line: %s\n", text );
         //printf("m_check_state====%d\n", m_check_state);
         switch ( m_check_state )
         {
@@ -375,9 +379,11 @@ http_conn::HTTP_CODE http_conn::do_request()
     }
     else if (strncasecmp( m_url, "/file", 5 ) == 0)
     {
+        printf("FILE_REQUEST...m_url: %s\n", m_url);
         strcpy( m_real_file, file_root_path );
         int len = strlen( file_root_path );
-        strncpy( m_real_file + len, m_url, FILENAME_LEN - len - 1 );
+        strncpy( m_real_file + len, m_url+6, FILENAME_LEN - len - 1 );
+        printf("m_real_file========%s\n", m_real_file);
         if ( stat( m_real_file, &m_file_stat ) < 0 )
         {
             return NO_RESOURCE;
@@ -390,7 +396,7 @@ http_conn::HTTP_CODE http_conn::do_request()
         {
             return BAD_REQUEST;
         }
-
+        printf("m_real_file========%s\n", m_real_file);
         int fd = open( m_real_file, O_RDONLY );
         m_file_address = ( char* )mmap( 0, m_file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0 );
         printf("do_request.FILE_REQUEST.m_file_address===%s\n", m_file_address);
@@ -412,19 +418,22 @@ void http_conn::unmap()
 
 bool http_conn::write()
 {
+    //printf("write start\n");
     int temp = 0;
     int bytes_have_send = 0;
     int bytes_to_send = m_write_idx;
     if ( bytes_to_send == 0 )
     {
+        //printf("write bytes_to_send == 0\n");
         modfd( m_epollfd, m_sockfd, EPOLLIN );
         init();
         return true;
     }
-    //printf("write...m_write_idx = %d \n", bytes_to_send);
+    //printf("write...bytes_to_send = %d \n", bytes_to_send);
     while( 1 )
     {
         temp = writev( m_sockfd, m_iv, m_iv_count );
+        //printf("write...writev temp = %d \n", temp);
         if ( temp <= -1 )
         {
             if( errno == EAGAIN )
@@ -435,11 +444,12 @@ bool http_conn::write()
             unmap();
             return false;
         }
-
+        
         bytes_to_send -= temp;
         bytes_have_send += temp;
         if ( bytes_to_send <= bytes_have_send )
         {
+            printf("write end\n");
             unmap();
             if( m_linger )
             {
@@ -518,7 +528,7 @@ bool http_conn::add_body( const char* content )
 
 bool http_conn::process_write( HTTP_CODE ret )
 {
-    printf("process_write start\n");
+    //printf("process_write start\n");
     switch ( ret )
     {
         case INTERNAL_ERROR:
@@ -567,6 +577,17 @@ bool http_conn::process_write( HTTP_CODE ret )
                 add_status_line( 200, ok_200_title );
                 add_headers( strlen(m_response_body), "timestamp-reply" );
                 add_body( m_response_body );
+                /*
+                encapsulation_write_data();
+                printf("FUNCTION_REQUEST end\n");
+                return true;*/
+            } else {
+                add_status_line( 400, error_400_title );
+                add_headers( strlen( error_400_form ), NULL );
+                if ( ! add_body( error_400_form ) )
+                {
+                    return false;
+                }
             }
             break;
         }
@@ -599,19 +620,40 @@ bool http_conn::process_write( HTTP_CODE ret )
         }
     }
 
-    printf("process_write end\n");
-    //printf("process_write======m_write_buf = %s\n", m_write_buf);
+    //printf("process_write end\n");
+    //printf("process_write======m_write_buf :\n %s\n", m_write_buf);
     //printf("process_write======m_write_idx = %d\n", m_write_idx);
     m_iv[ 0 ].iov_base = m_write_buf;
     m_iv[ 0 ].iov_len = m_write_idx;
     m_iv_count = 1;
     return true;
 }
+/*
+void http_conn::encapsulation_write_data()
+{
+    printf("encapsulation_write_data start\n");
+    m_iv_count = (m_write_idx / WRITE_BUFFER_SINGLE_SIZE) + 1;
+    printf("encapsulation_write_data..m_iv_count: %d\n", m_iv_count);
+    int offset = 0;
+    for(int i=0; i < m_iv_count; i++)
+    {
+        memset(m_write_single_buf[i], 0, sizeof(m_write_single_buf[i]));
+        strncpy(m_write_single_buf[i], m_write_buf+offset, WRITE_BUFFER_SINGLE_SIZE);
 
+        m_iv[i].iov_base = m_write_single_buf[i];
+        m_iv[i].iov_len = strlen(m_write_single_buf[i]);
+        //printf("encapsulation_write_data..m_iv[%d].iov_base: %s\n", i, m_write_single_buf[i]);
+        //printf("encapsulation_write_data..m_iv[%d].iov_len: %s\n", i, WRITE_BUFFER_SINGLE_SIZE);
+        offset += WRITE_BUFFER_SINGLE_SIZE;
+    }
+
+    printf("encapsulation_write_data end\n");
+}
+*/
 void http_conn::process()
 {
     HTTP_CODE read_ret = process_read();
-    printf("process_read======read_ret:%d\n", read_ret);
+    //printf("process_read======read_ret:%d\n", read_ret);
     if ( read_ret == NO_REQUEST )
     {
         modfd( m_epollfd, m_sockfd, EPOLLIN );
@@ -619,6 +661,7 @@ void http_conn::process()
     }
 
     bool write_ret = process_write( read_ret );
+    //printf("process_write======write_ret:%d\n", write_ret);
     if ( ! write_ret )
     {
         close_conn();
