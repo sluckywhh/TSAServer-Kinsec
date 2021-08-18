@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/Secengine_x64/!svn/ver/957/trunk/Include/PKIAPI
+END
+PKISDK51.h
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/Secengine_x64/!svn/ver/879/trunk/Include/PKIAPI/PKISDK51.h
+END
+APIBase.h
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/Secengine_x64/!svn/ver/1108/trunk/Include/PKIAPI/APIBase.h
+END
+APICert.h
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/Secengine_x64/!svn/ver/879/trunk/Include/PKIAPI/APICert.h
+END

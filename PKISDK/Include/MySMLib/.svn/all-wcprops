@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/Secengine_x64/!svn/ver/972/trunk/Include/MySMLib
+END
+mysm_sm3.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/Secengine_x64/!svn/ver/1023/trunk/Include/MySMLib/mysm_sm3.h
+END
+MySMLibFunc.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/Secengine_x64/!svn/ver/1060/trunk/Include/MySMLib/MySMLibFunc.h
+END

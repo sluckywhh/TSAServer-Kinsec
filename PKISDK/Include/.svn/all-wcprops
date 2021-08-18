@@ -1,0 +1,95 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/Secengine_x64/!svn/ver/969/trunk/Include
+END
+UICgnt.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/Secengine_x64/!svn/ver/879/trunk/Include/UICgnt.hpp
+END
+UICfg.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/Secengine_x64/!svn/ver/879/trunk/Include/UICfg.hpp
+END
+KTInterface.h
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/Secengine_x64/!svn/ver/893/trunk/Include/KTInterface.h
+END
+crlinterface.h
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/Secengine_x64/!svn/ver/904/trunk/Include/crlinterface.h
+END
+PKIDef.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/Secengine_x64/!svn/ver/879/trunk/Include/PKIDef.h
+END
+dtcspapi.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/Secengine_x64/!svn/ver/844/trunk/Include/dtcspapi.h
+END
+UICipher.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/Secengine_x64/!svn/ver/879/trunk/Include/UICipher.hpp
+END
+FJCATSA.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/Secengine_x64/!svn/ver/1031/trunk/Include/FJCATSA.h
+END
+CrlList.h
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/Secengine_x64/!svn/ver/904/trunk/Include/CrlList.h
+END
+MySMLib.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/Secengine_x64/!svn/ver/1063/trunk/Include/MySMLib.hpp
+END
+Util.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/Secengine_x64/!svn/ver/1111/trunk/Include/Util.hpp
+END
+UIBasic.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/Secengine_x64/!svn/ver/879/trunk/Include/UIBasic.hpp
+END
+KSLdapSearchFunc.h
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/Secengine_x64/!svn/ver/934/trunk/Include/KSLdapSearchFunc.h
+END
+kssmppclt.h
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/Secengine_x64/!svn/ver/904/trunk/Include/kssmppclt.h
+END
+TSASvrCltDll.h
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/Secengine_x64/!svn/ver/1031/trunk/Include/TSASvrCltDll.h
+END

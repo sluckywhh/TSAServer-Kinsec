@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/Secengine_x64/!svn/ver/947/trunk/Include/KTSDKAndKTCore
+END
+KTSDKErr.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/Secengine_x64/!svn/ver/1026/trunk/Include/KTSDKAndKTCore/KTSDKErr.h
+END
+KTSDK.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/Secengine_x64/!svn/ver/1203/trunk/Include/KTSDKAndKTCore/KTSDK.h
+END
+KTPKI.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/Secengine_x64/!svn/ver/1046/trunk/Include/KTSDKAndKTCore/KTPKI.h
+END

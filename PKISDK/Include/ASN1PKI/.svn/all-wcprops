@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/Secengine_x64/!svn/ver/890/trunk/Include/ASN1PKI
+END
+KTCertProp.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/Secengine_x64/!svn/ver/890/trunk/Include/ASN1PKI/KTCertProp.h
+END
+pkcs12.h
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/Secengine_x64/!svn/ver/1182/trunk/Include/ASN1PKI/pkcs12.h
+END
+ObjID.h
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/Secengine_x64/!svn/ver/1169/trunk/Include/ASN1PKI/ObjID.h
+END

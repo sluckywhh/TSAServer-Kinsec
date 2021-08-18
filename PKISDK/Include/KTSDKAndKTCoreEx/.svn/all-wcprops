@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/Secengine_x64/!svn/ver/1194/trunk/Include/KTSDKAndKTCoreEx
+END
+KTSDKAndKTCoreDef.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/Secengine_x64/!svn/ver/1194/trunk/Include/KTSDKAndKTCoreEx/KTSDKAndKTCoreDef.h
+END
+KTSDKAndKTCore.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/Secengine_x64/!svn/ver/1203/trunk/Include/KTSDKAndKTCoreEx/KTSDKAndKTCore.h
+END
+KTSDKAndKTCoreErr.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/Secengine_x64/!svn/ver/1194/trunk/Include/KTSDKAndKTCoreEx/KTSDKAndKTCoreErr.h
+END
+Splitter.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/Secengine_x64/!svn/ver/1194/trunk/Include/KTSDKAndKTCoreEx/Splitter.h
+END
+ptspinlock.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Secengine_x64/!svn/ver/1194/trunk/Include/KTSDKAndKTCoreEx/ptspinlock.h
+END
+CKTString.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/Secengine_x64/!svn/ver/1194/trunk/Include/KTSDKAndKTCoreEx/CKTString.h
+END

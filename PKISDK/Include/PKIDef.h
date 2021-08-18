@@ -1,0 +1,538 @@
+#ifndef __PKI_DEFINE_H__
+#define __PKI_DEFINE_H__
+
+/**
+  * @Name: PKIDef.h
+  * @Copyright: KTXA SoftWare
+  * @Author: Hongwei Yu
+  * @Date:  2003/04/18 16:29
+  * @Description: all PKI const and struct define 
+*/
+
+#include "KTType.h"
+
+#ifdef KT_WIN32
+	#pragma pack(push,1)
+#endif
+
+typedef KTBYTE			KT_STATE;
+typedef KTUINT32		KT_TOKEN_OBJ_TYPE;
+
+/*___________________________________________________________________________
+  32-16 | 15 | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+  ----- ----------------------------------------------------------------------
+  bit19: 0=public object, 1=private object.
+  bit18-bit16: reserved.
+  bit12-bit15: combinable flags.
+  bit11-bit8:  object class.
+  bit7-bit0:   object attribute.
+  bit32-bit20: kpsdk2.0 used
+*/
+
+
+//define the combinable flags
+const KTUINT32  KT_FLAG_MASK			=0x0F000;
+/*
+ * 如果在对象类型值中组合了KT_FLAG_MULTI_OBJ标志
+ * 说明当前的对象数据中包含了一个至多个此类型的数据
+ * 每个对象数据为一个KT_COUNTABLE_DATA结构
+ * 整个数据块看起来像这样:
+ * KT_COUNTABLE_DATA := {
+		KTUINT32 size;
+		KTBYTE data[size];
+ * };
+ * DATA := { 
+ *		KT_COUNTABLE_DATA 1,
+ *		KT_COUNTABLE_DATA 2,
+ *		KT_COUNTABLE_DATA 3,
+ *		...,
+ *		KT_COUNTABLE_DATA n
+ * };
+ * 注意: 1. 当前此标志仅允许用于IObjectMangr::putObject接口
+ *       2. 当使用此接口时，最后一个获取句柄参数必须设置为一个个数等于1024的KTHANDLE数组
+ *		 3. 在返回的数组中,有效的数组元素等于输入的对象个数。如果导入失败，那么该项元素的
+ *          句柄值为负的错误码，如，如果第2个对象已经存在，那么函数返回的句柄数组中
+ *			KTHANDLE[1]==((-)KT_ERR_OBJ_EXISTED)
+ *		 4. 如果需要检测某一对象是否导入成功，请注意其返回的句柄
+ *		 5. 请注意不要传送单体过大的数据块，并且对象个体数保持在1024个以内,
+ *			否则将可能导致不可预测的错误
+ *
+*/
+const KTUINT32  KT_FLAG_MULTI_OBJ		=0x01000;
+
+const KTUINT32	KT_PRIVATE				=0x80000; 
+const KTUINT32  KT_RESERVED_MASK		=0x70000;
+
+const KTUINT32	KT_PUBLIC_WRITABLE		=0x2000;
+const KTUINT32	KT_PUBLIC_READABLE		=0x1000;
+
+//define the class of object
+const KTUINT32  KT_OBJECT_MASK			=0x0f00;
+const KTUINT32	KT_PUBLIC_KEY			=0x0100;
+const KTUINT32	KT_PRIVATE_KEY		    =0x0200;
+const KTUINT32	KT_SECRET_KEY			=0x0300;
+const KTUINT32	KT_CERTIFICATE	        =0x0400;
+const KTUINT32	KT_CRL				    =0x0500;
+const KTUINT32	KT_DATA			        =0x0600;
+const KTUINT32	KT_SMARTTOKEN		    =0x0700;
+const KTUINT32	KT_KTDATA		        =0x0800;
+
+const KTUINT32  KT_PROP_MASK			=0x00ff;
+
+//define smarttoken type
+const KTUINT32	KTST_OPTION			    =0x0001;
+const KTUINT32	KTST_AUDIT			    =0x0002;
+
+//define KindData Type
+const KTUINT32	KTDT_TOKENPROP		    =0x0001;
+
+//define the key.
+const KTUINT32  KTKT_RSA				=0x0001;
+const KTUINT32	KTKT_DES				=0x0002;
+const KTUINT32	KTKT_3DES			    =0x0003;
+const KTUINT32	KTKT_RC2				=0x0004;
+const KTUINT32  KTKT_RC4				=0x0005;
+const KTUINT32  KTKT_SM2				=0x0008;
+const KTUINT32  KTKT_CEA				=0x0010;
+const KTUINT32	KTKT_PLUGABLE		    =0x00f0;
+
+
+//define cert type
+#ifdef	__cplusplus
+const KTUINT32   KTCT_PUBLIC_CERT		=KT_CERTIFICATE;
+const KTUINT32	 KTCT_PERSONAL_CERT		=KT_CERTIFICATE|KT_PRIVATE;
+#else
+const KTUINT32   KTCT_PUBLIC_CERT		=0x0400;
+const KTUINT32	 KTCT_PERSONAL_CERT		=0x80400;
+#endif
+
+const KTUINT32   KTCT_ROOT				=0x0001;
+const KTUINT32   KTCT_CA				=0x0002;
+const KTUINT32   KTCT_USER				=0x0003;
+const KTUINT32   KTCT_AUTHORIZED		=0x0004;
+
+
+//define CRL type
+const KTUINT32   KTRT_BASE			    =0x0000;
+const KTUINT32   KTRT_CRLS			    =0x0001;
+const KTUINT32	 KTRT_DELTA			    =0x0002;
+
+//define extension data.
+const KTUINT32   KT_EXT_DATA		    =0x10000;
+//define CER Grade
+const KTUINT32   KTOT_GRADE_ONE_CERT    =0x0001;
+const KTUINT32   KTOT_GRADE_TWO_CERT	=0x0002;
+const KTUINT32   KTOT_GRADE_THREE_CERT	=0x0003;
+//define ON/OFF
+const KTUINT32  KTOT_SWITCH_ON                      =0x0001;
+const KTUINT32  KTOT_SWITCH_OFF						=0x0002;
+
+///////////////////////////////////////////////////////////////////////
+//define token object type. it's use.
+#ifdef	__cplusplus
+const KTUINT32	KTOT_NULL			    =0;
+const KTUINT32	KTOT_READABLE_PRVIATE	=KT_PRIVATE|KT_PUBLIC_READABLE;
+const KTUINT32	KTOT_RSA_PUBLIC_KEY	    =KT_PUBLIC_KEY|KTKT_RSA|KT_PRIVATE;
+const KTUINT32	KTOT_RSA_PRIVATE_KEY 	=KT_PRIVATE_KEY|KTKT_RSA|KT_PRIVATE;
+const KTUINT32	KTOT_DES_KEY		    =KT_SECRET_KEY|KTKT_DES|KT_PRIVATE;
+const KTUINT32  KTOT_3DES_KEY		    =KT_SECRET_KEY|KTKT_3DES|KT_PRIVATE;
+const KTUINT32	KTOT_RC2_KEY			=KT_SECRET_KEY|KTKT_RC2|KT_PRIVATE;
+const KTUINT32	KTOT_RC4_KEY			=KT_SECRET_KEY|KTKT_RC4|KT_PRIVATE;
+const KTUINT32	KTOT_CEA_KEY			=KT_SECRET_KEY|KTKT_CEA|KT_PRIVATE;
+const KTUINT32  KTOT_PLUGABLE_KEY	    =KT_SECRET_KEY|KTKT_PLUGABLE|KT_PRIVATE;
+const KTUINT32	KTOT_CRL				=KT_CRL | KTRT_BASE;
+const KTUINT32	KTOT_CRLS			    =KT_CRL | KTRT_CRLS;
+const KTUINT32	KTOT_DELTA_CRL		    =KT_CRL | KTRT_DELTA;
+const KTUINT32	KTOT_SM2_PUBLIC_KEY	    =KT_PUBLIC_KEY|KTKT_SM2|KT_PRIVATE;
+const KTUINT32	KTOT_SM2_PRIVATE_KEY 	=KT_PRIVATE_KEY|KTKT_SM2|KT_PRIVATE;
+
+const KTUINT32  KTOT_PUBLIC_ROOT_CERT				=KTCT_PUBLIC_CERT|KTCT_ROOT;
+const KTUINT32  KTOT_PERSONAL_ROOT_CERT				=KTCT_PERSONAL_CERT|KTCT_ROOT;
+const KTUINT32  KTOT_PUBLIC_CA_CERT					=KTCT_PUBLIC_CERT|KTCT_CA;
+const KTUINT32  KTOT_PERSONAL_CA_CERT				=KTCT_PERSONAL_CERT|KTCT_CA;
+const KTUINT32  KTOT_PUBLIC_USER_CERT				=KTCT_PUBLIC_CERT|KTCT_USER;
+const KTUINT32  KTOT_PERSONAL_USER_CERT				=KTCT_PERSONAL_CERT|KTCT_USER;
+const KTUINT32  KTOT_PUBLIC_AUTHORIZED_CERT			=KTCT_PUBLIC_CERT|KTCT_AUTHORIZED;
+const KTUINT32  KTOT_PERSONAL_AUTHORIZED_CERT		=KTCT_PERSONAL_CERT|KTCT_AUTHORIZED;
+
+const KTUINT32	KTOT_PUBLIC_USER_DATA_TYPE_BASE		=KT_DATA;
+const KTUINT32	KTOT_PERSONAL_USER_DATA_TYPE_BASE	=KT_DATA|KT_PRIVATE;
+const KTUINT32	KTOT_PERSONAL_READABLE_DATA_TYPE_BASE = KT_PRIVATE|KT_PUBLIC_READABLE|KT_DATA;
+
+const KTUINT32  KTOT_CACERT_STATUS					=KTOT_PUBLIC_USER_DATA_TYPE_BASE+1;   //for ca
+
+const KTUINT32	KTOT_SMARTTOKEN_OPTION				=KT_PRIVATE|KT_SMARTTOKEN|KTST_OPTION;
+const KTUINT32	KTOT_SMARTTOKEN_AUDIT				=KT_PRIVATE|KT_SMARTTOKEN|KTST_AUDIT;
+
+const KTUINT32	KTOT_TOKEN_PROPERTY					=KT_PRIVATE|KT_KTDATA|KTDT_TOKENPROP;
+
+
+
+#else
+const KTUINT32	KTOT_NULL			    =0;
+const KTUINT32	KTOT_READABLE_PRVIATE	=0x81000;
+const KTUINT32	KTOT_RSA_PUBLIC_KEY	    =0x80101;
+const KTUINT32	KTOT_RSA_PRIVATE_KEY 	=0x80201;
+const KTUINT32	KTOT_DES_KEY		    =0x80302;
+const KTUINT32  KTOT_3DES_KEY		    =0x80303;
+const KTUINT32	KTOT_RC2_KEY			=0x80304;
+const KTUINT32	KTOT_RC4_KEY			=0x80305;
+const KTUINT32	KTOT_CEA_KEY			=0x80310;
+const KTUINT32  KTOT_PLUGABLE_KEY	    =0x803f0;
+const KTUINT32	KTOT_CRL				=0x0500;
+const KTUINT32	KTOT_CRLS			    =0x0501;
+const KTUINT32	KTOT_DELTA_CRL		    =0x0502;
+const KTUINT32	KTOT_SM2_PUBLIC_KEY	    =0x80108;
+const KTUINT32	KTOT_SM2_PRIVATE_KEY 	=0x80208;
+
+const KTUINT32  KTOT_PUBLIC_ROOT_CERT				=0x0401;
+const KTUINT32  KTOT_PERSONAL_ROOT_CERT				=0x80401;
+const KTUINT32  KTOT_PUBLIC_CA_CERT					=0x0402;
+const KTUINT32  KTOT_PERSONAL_CA_CERT				=0x80402;
+const KTUINT32  KTOT_PUBLIC_USER_CERT				=0x0403;
+const KTUINT32  KTOT_PERSONAL_USER_CERT				=0x80403;
+const KTUINT32  KTOT_PUBLIC_AUTHORIZED_CERT			=0x0404;
+const KTUINT32  KTOT_PERSONAL_AUTHORIZED_CERT		=0x80404;
+
+const KTUINT32	KTOT_PUBLIC_USER_DATA_TYPE_BASE		=0x0600;
+const KTUINT32	KTOT_PERSONAL_USER_DATA_TYPE_BASE	=0x80600;
+const KTUINT32	KTOT_PERSONAL_READABLE_DATA_TYPE_BASE = 0x81600;
+
+const KTUINT32  KTOT_CACERT_STATUS					=0x0601;   
+
+const KTUINT32	KTOT_SMARTTOKEN_OPTION				=0x80701;
+const KTUINT32	KTOT_SMARTTOKEN_AUDIT				=0x80702;
+
+const KTUINT32	KTOT_TOKEN_PROPERTY					=0x80801;
+
+
+
+#endif
+
+///////////////////////////////////////////////////////////////////////
+//the state define.
+/*_______________________________
+ | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+  --------------------------------
+bit7-bit4:the attribute bit.
+bit3-bit0:user defined bit.
+*/
+const KT_STATE	KTS_USER_MASK			=0x0f;
+/*the state of certificate
+ bit7:revoke bits 1:revocation
+ 		  0:normal 
+ bit6-bit4:reserved
+ bit3-bit0:propety
+*/
+const KT_STATE	KTS_CERT_MASK			=0x80;
+const KT_STATE	KTS_CERT_REVOKED		=0x80;
+const KT_STATE	KTS_CERT_NORMAL			=0x00;
+
+//define token propety
+//define rsa bits.
+const KTINT32 KTP_SOFTWARE_CRYPTO	=0x1000;
+const KTINT32 KTP_HARDWARE_CRYPTO	=0x2000;
+const KTINT32 KTP_512_BITS			=0x0001;
+const KTINT32 KTP_768_BITS			=0x0002;
+const KTINT32 KTP_1024_BITS			=0x0004;
+const KTINT32 KTP_2048_BITS			=0x0008;
+const KTINT32 KTP_4096_BITS			=0x0010;		
+
+const KTINT32 KTP_MUTIUSER			=0x0100;
+#ifdef	__cplusplus
+const KTINT32 KTP_ALL_BITS			=(KTP_512_BITS|KTP_768_BITS|KTP_1024_BITS|KTP_2048_BITS);
+#else
+const KTINT32 KTP_ALL_BITS			=0x000F;
+#endif
+
+
+typedef KTUINT32	KT_CIPHER_MECHANISM;
+typedef KTUINT32	KT_MECHANISM_TYPE;
+typedef KTUINT32	KT_CIPHER_MODE;
+
+//define crypto mechanism
+
+const KTUINT32	KT_MECHANSIM_TYPE_MASK				=0x0000ffff;
+const KTUINT32	KMT_RSA_PKCS						=0x00000001;
+const KTUINT32	KMT_DES_ECB							=0x00000010;
+const KTUINT32	KMT_DES_CBC							=0x00000011;
+const KTUINT32  KMT_2DES_ECB						=0x00000014;
+const KTUINT32  KMT_3DES_ECB						=0x00000015;
+const KTUINT32  KMT_2DES_CBC						=0x00000016;
+const KTUINT32  KMT_3DES_CBC						=0x00000017;
+const KTUINT32  KMT_RC4								=0x00000018;
+const KTUINT32  KMT_RC2_ECB							=0x00000019;
+const KTUINT32  KMT_RC2_CBC							=0x00000020;
+const KTUINT32  KMT_CEA								=0x00000021;
+
+const KTUINT32	KMT_MD2								=0x00000040;
+const KTUINT32	KMT_MD5								=0x00000041;
+const KTUINT32	KMT_SHA1							=0x00000042;
+const KTUINT32  KMT_MD2_RSA_PKCS						=0x00000043;
+const KTUINT32  KMT_MD5_RSA_PKCS						=0x00000044;
+const KTUINT32  KMT_SHA1_RSA_PKCS						=0x00000045;
+const KTUINT32  KMT_SSL_MD5_SHA1_RSA_PKCS				=0x00000046;
+
+const KTUINT32	KMT_MD2_RSA_PKCS7					=0x00000047;
+const KTUINT32	KMT_MD5_RSA_PKCS7					=0x00000048;
+const KTUINT32	KMT_SHA1_RSA_PKCS7					=0x00000049;
+
+const KTUINT32  KMT_RSA_PKCS_KEY_PAIR_GEN			=0x00000051;
+const KTUINT32  KMT_DES_KEY_GEN						=0x00000052;
+const KTUINT32  KMT_3DES_KEY_GEN					=0x00000053;
+const KTUINT32  KMT_2DES_KEY_GEN					=0x00000054;
+const KTUINT32  KMT_RC2_KEY_GEN						=0x00000058;
+const KTUINT32  KMT_RC4_KEY_GEN						=0x00000059;
+const KTUINT32  KMT_CEA_KEY_GEN						=0x00000060;
+
+const KTUINT32	KMT_SM2								=0x00000080;
+const KTUINT32  KMT_SM3								=0x00000081;
+const KTUINT32  KMT_SM3_SM2							=0x00000082;
+const KTUINT32  KMT_SM3_RSA							=0x00000083;
+const KTUINT32  KMT_SM2_KEY_PAIR_GEN				=0x00000084;
+
+const KTUINT32	KMT_B64								=0x00000100;
+const KTUINT32	KMT_VENDER_DEFINED					=0x00001000;
+
+//define cipher mode
+const KTUINT32	KT_CIPHER_MODE_MASK					=0x00ff0000;
+const KTUINT32	KMT_ENCRYPT							=0x00010000;
+const KTUINT32	KMT_DECRYPT							=0x00020000;
+const KTUINT32	KMT_SIGNATURE						=0x00030000;
+const KTUINT32	KMT_VERIFY							=0x00040000;
+const KTUINT32	KMT_DIGEST							=0x00050000;
+const KTUINT32	KMT_ENCODE							=0x00060000;
+const KTUINT32	KMT_DECODE							=0x00070000;
+
+//define cipher param
+typedef struct KT_MECHANISM_PARAM{
+	KT_MECHANISM_TYPE	unMechType;
+	KTUINT			    unKeyLen;
+	KTUINT 			    unIVLen;
+	KTUINT			    unOtherParam;
+	KTBYTE 			    szReserved[64];
+}KT_MECHANISM_PARAM, *KT_MECHANISM_PARAM_PTR;
+//typedef KT_MECHANISM_PARAM*		KT_MECHANISM_PARAM_PTR;
+//define token info 
+//structure size=64+32 byte.
+typedef struct KT_TOKEN_INFO
+{			
+	KTCHAR  szLabel[32];
+	KTULONG nMaxObjNum;
+	KTULONG nVersion;
+	KTBYTE	nMinPINLen;
+	KTBYTE	nMaxPINLen;
+	KTINT16	nProp;
+	KTBYTE	szSerialNum[16];
+
+	KTUINT32	nTotalMemory;	
+	KTUINT32	nFreeMemory;	
+	KTUINT32	nLastUpdateTime; 
+
+	KTBYTE		nLockedRef;	
+	KTUINT32	nProp2;
+	KTBYTE		nUserProp;
+	KTBYTE		szReserved[18];
+}KT_TOKEN_INFO, *KT_TOKEN_INFO_PTR;
+
+//define TOKEN PROPERTY2
+const KTUINT32	 KTP_SMART_TOKEN		=0x00000001;
+
+//define token state
+typedef KTUINT32					KT_TOKEN_STATE;
+typedef KT_TOKEN_STATE*				KT_TOKEN_STATE_PTR;
+typedef	KTUINT32					KT_DEVICE_STATE;
+typedef	KTUINT32					KT_INT_TOKEN_STATE;		//	Token internal state
+
+//	tokenState	=	deviceState | internalTokenState
+const KTUINT32				DEVICE_STATE_MASK		    =0x0000ff00;
+const KTUINT32				INT_TOKEN_STATE_MASK		=0x000000ff;
+
+const KTUINT32				KTS_TOKEN_ONLINE			=0x00000100;
+const KTUINT32				KTS_TOKEN_OFFLINE			=0x00000000;
+#ifdef __cplusplus
+const KT_DEVICE_STATE		KTS_DEVICE_ABSENT			=KTS_TOKEN_OFFLINE;
+const KT_DEVICE_STATE		KTS_DEVICE_PRESENT			=KTS_TOKEN_ONLINE;
+#else
+const KT_DEVICE_STATE		KTS_DEVICE_ABSENT			=0x00000000;
+const KT_DEVICE_STATE		KTS_DEVICE_PRESENT			=0x00000100;
+#endif
+
+//	When HIWORD(tokenState) == KTS_DEVICE_ABSENT
+const KT_INT_TOKEN_STATE	KTS_NODEVICE				=0x00000000;
+const KT_INT_TOKEN_STATE	KTS_NOTSUPPORTED_DEVICE		=0x00000001;
+const KT_INT_TOKEN_STATE	KTS_NOT_ACTIVE				=0x00000002;
+//	When HIWORD(tokenState) == KTS_DEVICE_PRESENT
+const KT_INT_TOKEN_STATE	KTS_NULL					=0x00000000;
+const KT_INT_TOKEN_STATE	KTS_INIT					=0x00000001;
+const KT_INT_TOKEN_STATE	KTS_LOGIN					=0x00000002;
+const KT_INT_TOKEN_STATE	KTS_INVALID					=0x00000003;
+
+
+//define slot type
+const KTULONG	KT_FILE_SLOT			=1;
+const KTULONG	KT_ICCARD_SLOT		    =2;
+const KTULONG	KT_IKEY_SLOT			=3;
+const KTULONG	KT_FLOPPY_SLOT			=4;
+const KTULONG	KT_SHAECA_FILE_SLOT		=5;
+const KTULONG	KT_KLEM_SLOT			=6;
+const KTULONG	KT_PFX_SLOT				=7;
+const KTULONG	KT_SMARTKEY_SLOT		=8;
+const KTULONG	KT_PLUG_SLOT			=9;
+const KTULONG   KT_INFOKEY_SLOT         =10;
+const KTULONG   KT_WATCHKEY_SLOT        =11;
+const KTULONG   KT_SOFTDISK_SLOT        =12;
+const KTULONG   KT_MWKEY_SLOT           =13;
+const KTULONG   KT_WATCHTWIN_SLOT       =14;
+const KTULONG   KT_MINWAHTWIN_SLOT      =15;
+const KTULONG   KT_WESTONEKEY_SLOT      =16;
+const KTULONG   KT_WESTONETWIN_SLOT     =17;
+const KTULONG   KT_DEANKEY_SLOT			=18;
+const KTULONG   KT_DEANTWIN_SLOT		=19;
+const KTULONG   KT_ZCKEY_SLOT			=20;
+const KTULONG   KT_ZCTWIN_SLOT			=21;
+const KTULONG   KT_MW_PCSCKEY_SLOT		=22;
+const KTULONG   KT_MW_PCSCTWIN_SLOT		=23;
+const KTULONG   KT_HBKEY_SLOT			=24;
+const KTULONG   KT_HBTWIN_SLOT			=25;
+const KTULONG   KT_PKCS11WQKEY_SLOT		=26;
+
+const KTULONG	KT_CURRENT_SLOT				=0x1000;
+const KTULONG	KT_SLOT_CONTEXT_MASK		=0xffff0000L;
+
+#define KT_SET_SLOT_CONTEXT(a,b)			(a=(b<<16)|a)
+#define MAX_SLOT_TYPE_NUM				    256	
+
+const KTUINT32	SLOTSTATE_UNKNOWN = 0;
+const KTUINT32	SLOTSTATE_UNUSED = 1;
+const KTUINT32	SLOTSTATE_OPENEDSESSION = 2;
+const KTUINT32	SLOTSTATE_LOGGEDIN = 3;
+
+typedef struct KT_SLOT_INFO
+{
+  char szSlotDescription[128];	
+  char szManufacturerID[32];
+  KTUINT32 nID;
+  
+  char szReserved[124];
+  
+  KTULONG nVersion;
+  KTULONG nFlags;
+  KTUINT32 nType;
+}KT_SLOT_INFO, *KT_SLOT_INFO_PTR;
+
+typedef struct KT_SLOT_STATE
+{
+	KTUINT32	nID;
+	KTUINT32	nState;
+	KTUINT32	nType;
+	KTBYTE		bReserved[52];
+}KT_SLOT_STATE, *KT_SLOT_STATE_PTR;
+
+/**
+* define the flag of slot.
+*/
+const KTULONG	KTF_TOKEN_PRESENT			=0x00000001;
+const KTULONG	KTF_REMOVABLE_DEVICE		=0x00000002;
+
+//object id in IC card
+#define	MF_FILEID			0x3f00
+#define	DF_FILEID			0x2d00
+#define	IDTABLE_BASEID		0x2d00
+#define	RESERVED_FILECOUNT	0x03
+#define	EFSC_FILEID			0x2d01
+#define	TOKENINFO_FILEID	0x2d02
+#define	INDEX_FILELD		0x2d03
+
+//define object hash data len.
+#define KT_TOKEN_OBJ_HASH_LEN			16
+
+const KTHANDLE	KT_PUBLIC_HANDLE_BASE		=0x8000000;
+
+const KTUINT		KTINIT_NONE							=1;
+const KTUINT		KTINIT_APARTMENTTHREADED			=2;
+const KTUINT		KTINIT_MULTITHREADE					=4;
+
+typedef 
+struct KT_INITIALIZE_ARGS{
+	KTUINT32	nTheadMode;
+	KTBYTE		szReserved[64];
+	KTUINT		nReserved;
+}KT_INITIALIZE_ARGS;
+
+typedef KT_INITIALIZE_ARGS* KT_INITIALIZE_ARGS_PTR;
+
+typedef 
+struct KT_FINALIZE_ARGS{
+	KTBOOL		bFreeAll;
+	KTBYTE		szReserved[64];
+	KTUINT		nReserved;
+}KT_FINALIZE_ARGS;
+typedef KT_FINALIZE_ARGS* KT_FINALIZE_ARGS_PTR;
+
+
+//define SDK中全局上下文结构
+const KTUINT	KTTOKEN_CONTEXT_TYPE		=1;
+typedef struct KT_TOKEN_CONTEXT{
+	KTUINT		nContextType;
+	KTULONG		nSlotType;				//描述当前SLOT类型
+	KTHANDLE	hPubToken;				//公共TOKEN句柄
+	KTHANDLE	hDeviceHandle;			//SLOT相关设备句柄
+	KTUINT		nDevParam1;				//设备相关参数1
+	KTUINT		nDevParam2;				//设备相关参数2
+	KTBOOL		bPersonal;				//是否PERSONAL操作.
+	KTBYTE		nDeviceIndex;
+	KTBYTE		szReserved[54];
+}KT_TOKEN_CONTEXT;
+
+typedef struct KT_UI_PARAM{
+	KTHANDLE	hWnd;
+	KTUINT32	nUIType;
+	KTBYTE		szReserved[64];
+}KT_UI_PARAM,*KT_UI_PARAM_PTR;
+
+#if defined(_WIN32) && (!defined(KT_WIN64))
+typedef KTUINT32					KT_SESSION_HANDLE;
+#else
+typedef void *						KT_SESSION_HANDLE;
+#endif
+typedef KT_SESSION_HANDLE *			KT_SESSION_HANDLE_PTR;
+
+typedef KTUINT32					KTCONTEXT;
+typedef KTCONTEXT*					KTCONTEXT_PTR;
+
+#define		MAX_USERNAME_LEN	64
+
+typedef struct KT_SESSION_INFO{
+	KTUINT32		nSlotID;
+	KTUINT32		nSlotType;
+	KTUINT32		nTokenState;
+	KTBOOL			bLoggedIn;
+	KTCHAR			szUserName[MAX_USERNAME_LEN+1];
+	KTBYTE			guid[54];
+}KT_SESSION_INFO, *KT_SESSION_INFO_PTR;
+
+const KTUINT32	USERTYPE_ADMIN		= 0x01;
+const KTUINT32	USERTYPE_USER		= 0x02;
+
+typedef struct KT_USER_PROPER {
+	KTUINT32  nUserType;
+	KTBYTE   bReserved[60];
+}KT_USER_PROPER, *KT_USER_PROPER_PTR;
+
+typedef struct KT_COUNTABLE_DATA {
+	KTUINT32 nSize;
+	KTBYTE bData[1];
+}KT_COUNTABLE_DATA, *KT_COUNTABLE_DATA_PTR;
+
+#ifdef KT_WIN32
+	#pragma pack(pop)
+#endif
+
+/// Rivison history
+/// ----------------------------------------------------------------------------
+/// 	Version	       Date        Author      Note
+/// ----------------------------------------------------------------------------
+///   1.0.0.0  2003/04/21 09:31  Hongwei Yu   created 
+
+#endif //_KPDEF_H_INCLUED

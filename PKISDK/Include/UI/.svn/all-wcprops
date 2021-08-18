@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/Secengine_x64/!svn/ver/957/trunk/Include/UI
+END
+UICgnt.h
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/Secengine_x64/!svn/ver/1235/trunk/Include/UI/UICgnt.h
+END
+UICfg.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/Secengine_x64/!svn/ver/843/trunk/Include/UI/UICfg.h
+END
+UICipher.h
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/Secengine_x64/!svn/ver/1173/trunk/Include/UI/UICipher.h
+END
