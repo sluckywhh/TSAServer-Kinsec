@@ -39,14 +39,18 @@ public:
 	unsigned char m_SM2PKey[8192];   //时间戳证书私钥
     int m_SM2CertLen;           //时间戳证书长度
     int m_SM2PKeyLen;           //时间戳证书私钥长度
-	//X509* m_SM2Ca;
-	//X509* m_SM2RootCa;
+    //密码卡
     int m_FMSM2CertLen;           //密码卡时间戳证书长度
     char m_FMSM2Cert_B64[8192];   //密码卡时间戳证书(Base64)
     unsigned char m_FMSM2Cert[8192];   //密码卡时间戳证书
+    //有效期
 	time_t m_SM2BeforeValid;
 	time_t m_SM2AfterValid;
 
+    //epoll
+
+
+    //class declare
     CTSACommonUtil util;
     CKTLogKit log;
 };

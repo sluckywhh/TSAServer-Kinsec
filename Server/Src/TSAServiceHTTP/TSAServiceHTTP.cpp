@@ -86,13 +86,12 @@ void Service()
 		exit( 0 );
 	}
     
-	signal( SIGTERM, OnBeforeExit );
+	signal( SIGTERM, OnBeforeExit ); // 设置进程退出前处理函数
 
     //读取应用配置数据
 	if( g_app.start() != 0 )
 	{
 		Stop();
-		exit( 0 );
 	}
 
     const char* ip = g_app.m_strIP.c_str();
@@ -107,7 +106,6 @@ void Service()
     catch( ... )
     {
         Stop();
-        exit( 0 );
     }
 
     http_conn* users = new http_conn[ MAX_FD ];
@@ -115,8 +113,9 @@ void Service()
 
     int listenfd = socket( AF_INET, SOCK_STREAM, 0 );
     assert( listenfd >= 0 );
-    struct linger tmp = { 1, 5 };
-    setsockopt( listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof( tmp ) );
+    printf( "[Info] listen fd: %d\n", listenfd );
+    //struct linger tmp = { 1, 5 };
+    //setsockopt( listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof( tmp ) );
 
     int ret = 0;
     struct sockaddr_in address;
@@ -126,12 +125,13 @@ void Service()
     address.sin_port = htons( port );
     ret = bind( listenfd, ( struct sockaddr* )&address, sizeof( address ) );
     assert( ret >= 0 );
-    ret = listen( listenfd, 10 );
+    ret = listen( listenfd, 128 );
     assert( ret >= 0 );
 
     epoll_event events[ MAX_EVENT_NUMBER ];
     int epollfd = epoll_create( MAX_FD ); //创建epoll
     assert( epollfd != -1 );
+    printf( "[Info] epoll fd: %d\n", epollfd );
     addfd( epollfd, listenfd, false ); //注册listenfd到epoll
     http_conn::m_epollfd = epollfd;
     printf( "[Info] 时间戳颁发服务(HTTP)启动成功！\n" );
@@ -144,6 +144,7 @@ void Service()
         if ( ( number < 0 ) && ( errno != EINTR ) )
         {
             printf( "[Error]epoll failure\n" );
+            Stop();
             exit( 0 );
             break;
         }
@@ -151,6 +152,7 @@ void Service()
         for ( int i = 0; i < number; i++ )
         {
             int sockfd = events[i].data.fd;
+            printf( "[Info] epoll event fd:%d\n", sockfd );
             if( sockfd == listenfd )
             {
                 struct sockaddr_in client_address;
@@ -173,7 +175,7 @@ void Service()
             {
                 users[sockfd].close_conn();
             }
-            else if( events[i].events & EPOLLIN )
+            else if( events[i].events & EPOLLIN ) //可读
             {
                 if( users[sockfd].read() )
                 {
@@ -184,7 +186,7 @@ void Service()
                     users[sockfd].close_conn();
                 }
             }
-            else if( events[i].events & EPOLLOUT )
+            else if( events[i].events & EPOLLOUT ) //可写
             {
                 if( !users[sockfd].write() )
                 {

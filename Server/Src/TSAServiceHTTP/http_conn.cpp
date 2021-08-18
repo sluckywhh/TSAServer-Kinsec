@@ -12,7 +12,7 @@ const char* error_500_form = "There was an unusual problem serving the requested
 
 const char* file_root_path = "../File/";
 
-int setnonblocking( int fd )
+int setNonBlock( int fd )
 {
     int old_option = fcntl( fd, F_GETFL );
     int new_option = old_option | O_NONBLOCK;
@@ -31,7 +31,7 @@ void addfd( int epollfd, int fd, bool one_shot )
         event.events |= EPOLLONESHOT;
     }
     epoll_ctl( epollfd, EPOLL_CTL_ADD, fd, &event );
-    setnonblocking( fd );
+    setNonBlock( fd );
 }
 
 void removefd( int epollfd, int fd )
@@ -54,27 +54,29 @@ int http_conn::m_epollfd = -1;
 
 void http_conn::close_conn( bool real_close )
 {
-    if( real_close && ( m_sockfd != -1 ) )
+    if( real_close && ( m_socketfd != -1 ) )
     {
-        //modfd( m_epollfd, m_sockfd, EPOLLIN );
-        removefd( m_epollfd, m_sockfd );
-        m_sockfd = -1;
+        //modfd( m_epollfd, m_socketfd, EPOLLIN );
+        removefd( m_epollfd, m_socketfd );
+        m_socketfd = -1;
         m_user_count--;
     }
 }
 
-void http_conn::init( int sockfd, const sockaddr_in& addr )
+void http_conn::init( int socketfd, const sockaddr_in& addr )
 {
-    printf( "[Info] user init: sockfd[%d], ipaddr[%s] \n", sockfd, inet_ntoa(addr.sin_addr) );
+    printf( "[Info] user init: socketfd[%d], ipaddr[%s] \n", socketfd, inet_ntoa(addr.sin_addr) );
 
-    m_sockfd = sockfd;
+    m_socketfd = socketfd;
     m_address = addr;
+    /*
     int error = 0;
     socklen_t len = sizeof( error );
-    getsockopt( m_sockfd, SOL_SOCKET, SO_ERROR, &error, &len );
+    getsockopt( m_socketfd, SOL_SOCKET, SO_ERROR, &error, &len );
     int reuse = 1;
-    setsockopt( m_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof( reuse ) );
-    addfd( m_epollfd, sockfd, true );
+    setsockopt( m_socketfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof( reuse ) );
+    */
+    addfd( m_epollfd, socketfd, true );
     m_user_count++;
 
     init();
@@ -154,7 +156,7 @@ bool http_conn::read()
     int bytes_read = 0;
     while( true )
     {
-        bytes_read = recv( m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0 );
+        bytes_read = recv( m_socketfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0 );
         //printf("read...bytes_read: %d\n", bytes_read);
         if ( bytes_read == -1 )
         {
@@ -426,20 +428,20 @@ bool http_conn::write()
     if ( bytes_to_send == 0 )
     {
         //printf("write bytes_to_send == 0\n");
-        modfd( m_epollfd, m_sockfd, EPOLLIN );
+        modfd( m_epollfd, m_socketfd, EPOLLIN );
         init();
         return true;
     }
     //printf("write...bytes_to_send = %d \n", bytes_to_send);
     while( 1 )
     {
-        temp = writev( m_sockfd, m_iv, m_iv_count );
+        temp = writev( m_socketfd, m_iv, m_iv_count );
         //printf("write...writev temp = %d \n", temp);
         if ( temp <= -1 )
         {
             if( errno == EAGAIN )
             {
-                modfd( m_epollfd, m_sockfd, EPOLLOUT );
+                modfd( m_epollfd, m_socketfd, EPOLLOUT );
                 return true;
             }
             unmap();
@@ -455,12 +457,12 @@ bool http_conn::write()
             if( m_linger )
             {
                 init();
-                modfd( m_epollfd, m_sockfd, EPOLLIN );
+                modfd( m_epollfd, m_socketfd, EPOLLIN );
                 return true;
             }
             else
             {
-                modfd( m_epollfd, m_sockfd, EPOLLIN );
+                modfd( m_epollfd, m_socketfd, EPOLLIN );
                 return false;
             } 
         }
@@ -653,11 +655,12 @@ void http_conn::encapsulation_write_data()
 */
 void http_conn::process()
 {
+    //printf("pthread_self======%lu\n", pthread_self());
     HTTP_CODE read_ret = process_read();
     //printf("process_read======read_ret:%d\n", read_ret);
     if ( read_ret == NO_REQUEST )
     {
-        modfd( m_epollfd, m_sockfd, EPOLLIN );
+        modfd( m_epollfd, m_socketfd, EPOLLIN );
         return;
     }
 
@@ -668,6 +671,6 @@ void http_conn::process()
         close_conn();
     }
 
-    modfd( m_epollfd, m_sockfd, EPOLLOUT );
+    modfd( m_epollfd, m_socketfd, EPOLLOUT );
 }
 
