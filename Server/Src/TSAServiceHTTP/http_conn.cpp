@@ -24,8 +24,8 @@ void addfd( int epollfd, int fd, bool one_shot )
 {
     epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;//EPOLLET：将EPOLL设为边缘触发(Edge Triggered)模式
-    //event.events = EPOLLIN | EPOLLRDHUP;
+    //event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;//EPOLLET：将EPOLL设为边缘触发(Edge Triggered)模式
+    event.events = EPOLLIN | EPOLLRDHUP;
     if( one_shot )
     {
         event.events |= EPOLLONESHOT;
@@ -44,7 +44,8 @@ void modfd( int epollfd, int fd, int ev )
 {
     epoll_event event;
     event.data.fd = fd;
-    event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+    //event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+    event.events = ev | EPOLLONESHOT | EPOLLRDHUP;
     epoll_ctl( epollfd, EPOLL_CTL_MOD, fd, &event );
 }
 
