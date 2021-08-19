@@ -2,6 +2,7 @@
     "C_Cpp.errorSquiggles": "Disabled",
     "files.associations": {
         "algorithm": "cpp",
-        "xloctime": "cpp"
+        "xloctime": "cpp",
+        "fstream": "cpp"
     }
 }

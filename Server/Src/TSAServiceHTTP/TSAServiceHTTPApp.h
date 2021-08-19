@@ -4,11 +4,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <cassert>
+#include <sys/epoll.h>
+#include <sys/types.h>
+#include <dirent.h>
+
 #include "../CommonUtil/TSACommonUtil.h"
 #include "locker.h"
 #include "time.h"
+#include "threadpool.h"
+#include "http_conn.h"
 
 using namespace std;
+
+#define MAX_FD 65536
+#define MAX_EVENT_NUMBER 10000
 
 class CTSAServiceHTTPApp
 {
@@ -18,9 +37,13 @@ public:
 public:
     int start(); //启动服务
     void createTSASerialNumber(char *pszSN); //生成唯一时间戳序列号
+    void initSocket();
+    void initEpoll();
+    //void initThreadpool();
 
 private:
     locker m_queuelocker;
+    //threadpool< http_conn >* pool;
 
 public:
     string m_strIP;
@@ -47,8 +70,12 @@ public:
 	time_t m_SM2BeforeValid;
 	time_t m_SM2AfterValid;
 
-    //epoll
+    //socket
+    int m_nListenFD;
 
+    //epoll
+    epoll_event m_Events[ MAX_EVENT_NUMBER ];
+    int m_nEpollFD;
 
     //class declare
     CTSACommonUtil util;

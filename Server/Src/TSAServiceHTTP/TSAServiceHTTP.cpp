@@ -1,31 +1,10 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <cassert>
-#include <sys/epoll.h>
-#include <sys/types.h>
-#include <dirent.h>
-
-#include "locker.h"
-#include "threadpool.h"
-#include "http_conn.h"
 #include "TSAServiceHTTPApp.h"
 
 #define PID_FILE   "Pid/TSAServiceHTTP.pid"
 
-#define MAX_FD 65536
-#define MAX_EVENT_NUMBER 10000
-
 CTSAServiceHTTPApp g_app;
-
-extern int addfd( int epollfd, int fd, bool one_shot );
-extern int removefd( int epollfd, int fd );
+threadpool< http_conn >* pool = NULL;
+http_conn* users = new http_conn[ MAX_FD ];
 
 void addsig( int sig, void( handler )(int), bool restart = true )
 {
@@ -45,11 +24,31 @@ void show_error( int connfd, const char* info )
     send( connfd, info, strlen( info ), 0 );
     close( connfd );
 }
-
+int handleAccept(struct sockaddr_in &client_address)
+{
+    socklen_t client_addr_length = sizeof( client_address );
+    int connfd = accept( g_app.m_nListenFD, ( struct sockaddr* )&client_address, &client_addr_length );
+    if ( connfd < 0 )
+    {
+        printf( "[Error] handleAccept errno is: %d\n", errno );
+        return 0;
+    }
+    if( http_conn::m_user_count >= MAX_FD )
+    {
+        show_error( connfd, "Internal server busy" );
+        return 0;
+    }
+    return connfd;
+} 
 /***********************************************************************************/
 void OnBeforeExit( int signal )
 {
+    close( g_app.m_nEpollFD );
+    close( g_app.m_nListenFD );
+    delete [] users;
+    delete pool;
 	remove( PID_FILE );
+    
 	printf( "[Info] 时间戳颁发服务(HTTP)停止成功！\n" );
 	exit( 0 );
 }
@@ -61,6 +60,7 @@ void Stop()
 		pid_t pid;
 		fread( &pid, 1, sizeof( pid ), fp );
 		fclose( fp );
+        printf( "[Info] Stop pid: %d\n", pid );
 		kill( pid, SIGTERM );
 	}
 }
@@ -78,6 +78,7 @@ void Service()
 	{
 		pid = getpid();
 		fwrite( &pid, 1, sizeof( pid ), fp );
+        printf( "[Info] Service pid: %d\n", pid );
 		fclose( fp );
 	}
 	else
@@ -87,18 +88,10 @@ void Service()
 	}
     
 	signal( SIGTERM, OnBeforeExit ); // 设置进程退出前处理函数
-
-    //读取应用配置数据
-	if( g_app.start() != 0 )
-	{
-		Stop();
-	}
-
-    const char* ip = g_app.m_strIP.c_str();
-    int port = g_app.m_nHttpPort;
     addsig( SIGPIPE, SIG_IGN );
-
-    threadpool< http_conn >* pool = NULL;
+    //读取应用配置数据
+	if( g_app.start() != 0 ) Stop();
+    //创建线程池
     try
     {
         pool = new threadpool< http_conn >;
@@ -107,101 +100,56 @@ void Service()
     {
         Stop();
     }
-
-    http_conn* users = new http_conn[ MAX_FD ];
     assert( users );
 
-    int listenfd = socket( AF_INET, SOCK_STREAM, 0 );
-    assert( listenfd >= 0 );
-    printf( "[Info] listen fd: %d\n", listenfd );
-    //struct linger tmp = { 1, 5 };
-    //setsockopt( listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof( tmp ) );
+    g_app.initSocket();
+    g_app.initEpoll();
 
-    int ret = 0;
-    struct sockaddr_in address;
-    bzero( &address, sizeof( address ) );
-    address.sin_family = AF_INET;
-    inet_pton( AF_INET, ip, &address.sin_addr );
-    address.sin_port = htons( port );
-    ret = bind( listenfd, ( struct sockaddr* )&address, sizeof( address ) );
-    assert( ret >= 0 );
-    ret = listen( listenfd, 128 );
-    assert( ret >= 0 );
-
-    epoll_event events[ MAX_EVENT_NUMBER ];
-    int epollfd = epoll_create( MAX_FD ); //创建epoll
-    assert( epollfd != -1 );
-    printf( "[Info] epoll fd: %d\n", epollfd );
-    addfd( epollfd, listenfd, false ); //注册listenfd到epoll
-    http_conn::m_epollfd = epollfd;
     printf( "[Info] 时间戳颁发服务(HTTP)启动成功！\n" );
-    printf( "[Info] IP:%s, Port:%d\n", ip, port );
+    printf( "[Info] IP:%s, Port:%d\n", g_app.m_strIP.c_str(), g_app.m_nHttpPort );
     while( true )
     {
-        printf( "[Info] m_user_count :%d\n", http_conn::m_user_count );
-        int number = epoll_wait( epollfd, events, MAX_EVENT_NUMBER, -1 );
-        printf( "[Info] epoll_wait num:%d\n", number );
-        if ( ( number < 0 ) && ( errno != EINTR ) )
+        printf( "[Info] user count :%d\n", http_conn::m_user_count );
+        int event_number = epoll_wait( g_app.m_nEpollFD, g_app.m_Events, MAX_EVENT_NUMBER, -1 );
+        printf( "[Info] epoll_wait num:%d\n", event_number );
+        if ( ( event_number < 0 ) && ( errno != EINTR ) )
         {
-            printf( "[Error]epoll failure\n" );
+            printf( "[Error]epoll_wait failure\n" );
             Stop();
-            exit( 0 );
-            break;
+            return;
         }
 
-        for ( int i = 0; i < number; i++ )
+        for ( int i = 0; i < event_number; i++ )
         {
-            int sockfd = events[i].data.fd;
-            printf( "[Info] epoll event fd:%d\n", sockfd );
-            if( sockfd == listenfd )
+            int fd = g_app.m_Events[i].data.fd;
+            int events = g_app.m_Events[i].events;
+            printf( "[Info] epoll_wait event fd:%d\n", fd );
+            if( fd == g_app.m_nListenFD )
             {
                 struct sockaddr_in client_address;
-                socklen_t client_addr_length = sizeof( client_address );
-                int connfd = accept( listenfd, ( struct sockaddr* )&client_address, &client_addr_length );
-                if ( connfd < 0 )
-                {
-                    printf( "[Error] accept errno is: %d\n", errno );
-                    continue;
-                }
-                if( http_conn::m_user_count >= MAX_FD )
-                {
-                    show_error( connfd, "Internal server busy" );
-                    continue;
-                }
-                
-                users[connfd].init( connfd, client_address );
+                int connfd = handleAccept(client_address);
+                if(connfd > 0) users[connfd].init( connfd, client_address );
             }
-            else if( events[i].events & ( EPOLLRDHUP | EPOLLHUP | EPOLLERR ) )
+            else if( events & ( EPOLLRDHUP | EPOLLHUP | EPOLLERR ) )
             {
-                users[sockfd].close_conn();
+                users[fd].close_conn();
             }
-            else if( events[i].events & EPOLLIN ) //可读
+            else if( events & EPOLLIN ) //可读
             {
-                if( users[sockfd].read() )
-                {
-                    pool->append( users + sockfd );
-                }
-                else
-                {
-                    users[sockfd].close_conn();
-                }
+                if( users[fd].read() ) pool->append( users + fd );
+                else users[fd].close_conn();
             }
-            else if( events[i].events & EPOLLOUT ) //可写
+            else if( events & EPOLLOUT ) //可写
             {
-                if( !users[sockfd].write() )
-                {
-                    users[sockfd].close_conn();
-                }
+                if( !users[fd].write() ) users[fd].close_conn();
             }
             else
-            {}
+            {
+                printf( "[WARNING]epoll_wait unknown event[%d]! \n", events );
+            }
         }
+        //sleep(3);
     }
-
-    close( epollfd );
-    close( listenfd );
-    delete [] users;
-    delete pool;
 }
 
 void Start()
@@ -216,22 +164,16 @@ void Start()
 			remove( PID_FILE );
 		else
 		{
+            printf( "[Info] exist Service pid: %d\n", pid );
 			printf( "[Info] 时间戳颁发服务(HTTP)已在运行，无法再次启动！\n" );
-			return ;
+			return;
 		}
 	}
 	Service();
 }
 void Restart()
 {
-	FILE * fp = fopen( PID_FILE, "rb" );
-	if( fp )
-	{
-		pid_t pid;
-		fread( &pid, 1, sizeof( pid ), fp );
-		fclose( fp );
-		kill( pid, SIGTERM );
-	}
+	Stop();
 	Service();
 }
 /***********************************************************************************/

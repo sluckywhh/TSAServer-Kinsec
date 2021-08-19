@@ -72,10 +72,10 @@ void http_conn::init( int socketfd, const sockaddr_in& addr )
     /*
     int error = 0;
     socklen_t len = sizeof( error );
-    getsockopt( m_socketfd, SOL_SOCKET, SO_ERROR, &error, &len );
+    getsockopt( m_socketfd, SOL_SOCKET, SO_ERROR, &error, &len );*/
     int reuse = 1;
     setsockopt( m_socketfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof( reuse ) );
-    */
+    
     addfd( m_epollfd, socketfd, true );
     m_user_count++;
 

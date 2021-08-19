@@ -1,5 +1,7 @@
 #include "TSAServiceHTTPApp.h"
 
+extern int addfd( int epollfd, int fd, bool one_shot );
+
 CTSAServiceHTTPApp::CTSAServiceHTTPApp()
 {
     m_strIP = "0.0.0.0";
@@ -110,4 +112,35 @@ int CTSAServiceHTTPApp::start()
 	
 
     return 0;
+}
+
+
+void CTSAServiceHTTPApp::initSocket()
+{
+    m_nListenFD = socket( AF_INET, SOCK_STREAM, 0 );
+    assert( m_nListenFD >= 0 );
+    printf( "[Info]initSocket listen fd: %d\n", m_nListenFD );
+	int reuse = 1;
+    setsockopt( m_nListenFD, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof( reuse ) );
+    //struct linger tmp = { 1, 5 };
+    //setsockopt( listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof( tmp ) );
+	
+    int ret = 0;
+    struct sockaddr_in address;
+    bzero( &address, sizeof( address ) );
+    address.sin_family = AF_INET;
+    inet_pton( AF_INET, m_strIP.c_str(), &address.sin_addr );
+    address.sin_port = htons( m_nHttpPort );
+    ret = bind( m_nListenFD, ( struct sockaddr* )&address, sizeof( address ) );
+    assert( ret >= 0 );
+    ret = listen( m_nListenFD, 128 );
+    assert( ret >= 0 );
+}
+void CTSAServiceHTTPApp::initEpoll()
+{
+    m_nEpollFD = epoll_create( MAX_FD );
+    assert( m_nEpollFD != -1 );
+    printf( "[Info]initEpoll epoll fd: %d\n", m_nEpollFD );
+    addfd( m_nEpollFD, m_nListenFD, false ); //×¢²álistenfdµ½epoll
+    http_conn::m_epollfd = m_nEpollFD;
 }
